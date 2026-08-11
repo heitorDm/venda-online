@@ -127,7 +127,7 @@ def login():
             session["usuario_id"] = usuario["id"]
             session["usuario_nome"] = usuario["nome"]
 
-            return redirect(url_for("painel"))
+            return redirect(url_for("inicio"))
 
         return "E-mail ou senha incorretos."
 
