@@ -6,6 +6,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Venda Online de Forma Simples</title>
+    .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px 40px;
+
+    background: rgba(8, 11, 18, 0.92);
+    border-bottom: 1px solid #202938;
+    backdrop-filter: blur(10px);
+}
+
+.navbar-logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: #00ff8c;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.navbar-links a {
+    color: white;
+    font-weight: bold;
+    padding: 9px 16px;
+    border-radius: 8px;
+}
+
+.navbar-links a:hover {
+    background: #00ff8c;
+    color: #06100b;
+}
+
+.navbar-links span {
+    color: #c7ccd6;
+}
+
+@media (max-width: 600px) {
+
+    .navbar {
+        padding: 15px 20px;
+    }
+
+    .navbar-logo {
+        font-size: 16px;
+    }
+
+    .navbar-links {
+        gap: 8px;
+        font-size: 13px;
+    }
+}
 
     <style>
 
@@ -529,6 +590,40 @@
 
 <body>
 
+    <nav class="navbar">
+
+    <div class="navbar-logo">
+        Venda Online
+    </div>
+
+    <div class="navbar-links">
+
+        {% if session.get("usuario_id") %}
+
+            <span>
+                Olá, {{ session.get("usuario_nome") }}
+            </span>
+
+            <a href="{{ url_for('logout') }}">
+                Sair
+            </a>
+
+        {% else %}
+
+            <a href="{{ url_for('login') }}">
+                Entrar
+            </a>
+
+            <a href="{{ url_for('cadastro') }}">
+                Criar conta
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</nav>
+
 
     <!-- PARTE PRINCIPAL -->
 
@@ -750,7 +845,12 @@
                         class="plan-button"
                     >
                         QUERO O ESSENCIAL
-                    </a>
+                    <a
+    href="{{ url_for('comprar_essencial') }}"
+    class="plan-button"
+>
+    QUERO O ESSENCIAL
+</a>
 
                 </div>
 
@@ -831,11 +931,11 @@
                     <!-- LINK DA KIWIFY PREMIUM -->
 
                     <a
-                        href="https://pay.kiwify.com.br/bQAdEAS"
-                        class="plan-button premium-button"
-                    >
-                        QUERO O PREMIUM 🚀
-                    </a>
+    href="{{ url_for('comprar_premium') }}"
+    class="plan-button premium-button"
+>
+    QUERO O PREMIUM 🚀
+</a>
 
                 </div>
 
