@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 
 # Chave usada para proteger a sessão
-app.secret_key = "troque-esta-chave-por-uma-chave-secreta"
+app.secret_key = "heitor e lindo"
 
 
 # =========================
@@ -241,6 +241,24 @@ def remover_aluno(aluno_id):
 # =========================
 # INICIAR
 # =========================
+
+@app.route("/comprar/essencial")
+def comprar_essencial():
+
+    if "usuario_id" not in session:
+        return redirect(url_for("login"))
+
+    return redirect("https://pay.kiwify.com.br/PLPL8Tq")
+
+
+@app.route("/comprar/premium")
+def comprar_premium():
+
+    if "usuario_id" not in session:
+        return redirect(url_for("login"))
+
+    return redirect("https://pay.kiwify.com.br/bQAdEAS")
+
 
 if __name__ == "__main__":
 
