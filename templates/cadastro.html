@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Criar conta - Venda Online</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #071B13, #00A86B);
+        }
+
+        .cadastro-box {
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #071B13;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            margin-bottom: 18px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #00A86B;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #008f5a;
+        }
+
+        .login {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .login a {
+            color: #00A86B;
+            font-weight: bold;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="cadastro-box">
+
+        <h1>Criar conta</h1>
+
+        <p class="subtitle">
+            Crie sua conta para continuar
+        </p>
+
+        <form method="POST" action="{{ url_for('cadastro') }}">
+
+            <label for="nome">Nome</label>
+
+            <input
+                type="text"
+                id="nome"
+                name="nome"
+                placeholder="Digite seu nome"
+                required
+            >
+
+            <label for="email">E-mail</label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Digite seu e-mail"
+                required
+            >
+
+            <label for="senha">Senha</label>
+
+            <input
+                type="password"
+                id="senha"
+                name="senha"
+                placeholder="Crie uma senha"
+                minlength="6"
+                required
+            >
+
+            <button type="submit">
+                CRIAR CONTA
+            </button>
+
+        </form>
+
+        <p class="login">
+            Já tem uma conta?
+            <a href="{{ url_for('login') }}">Entrar</a>
+        </p>
+
+    </div>
+
+

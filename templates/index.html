@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Venda Online de Forma Simples</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #080b12;
+            color: white;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* HERO */
+
+        .hero {
+            min-height: 90vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            padding: 70px 20px;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #162447 0%,
+                    #080b12 55%
+                );
+        }
+
+        .hero-content {
+            max-width: 900px;
+        }
+
+        .tag {
+            display: inline-block;
+
+            background: rgba(0, 255, 140, 0.12);
+
+            border: 1px solid #00ff8c;
+
+            color: #00ff8c;
+
+            padding: 8px 18px;
+
+            border-radius: 30px;
+
+            font-size: 14px;
+
+            font-weight: bold;
+
+            margin-bottom: 25px;
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 7vw, 75px);
+
+            line-height: 1.05;
+
+            margin-bottom: 25px;
+        }
+
+        .hero h1 span {
+            color: #00ff8c;
+        }
+
+        .hero p {
+            color: #c7ccd6;
+
+            font-size: 19px;
+
+            max-width: 700px;
+
+            margin: auto;
+        }
+
+        .hero-button {
+            display: inline-block;
+
+            margin-top: 35px;
+
+            background: #00ff8c;
+
+            color: #06100b;
+
+            padding: 16px 35px;
+
+            border-radius: 10px;
+
+            font-weight: bold;
+
+            font-size: 17px;
+
+            transition: 0.3s;
+        }
+
+        .hero-button:hover {
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 10px 35px
+                rgba(0, 255, 140, 0.25);
+        }
+
+        /* SEÇÕES */
+
+        section {
+            padding: 80px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+
+            margin: auto;
+        }
+
+        .section-title {
+            text-align: center;
+
+            font-size: 38px;
+
+            margin-bottom: 15px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+
+            color: #aeb5c2;
+
+            max-width: 650px;
+
+            margin: 0 auto 50px;
+        }
+
+        /* BENEFÍCIOS */
+
+        .benefits {
+            background: #0c1019;
+        }
+
+        .benefit-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 20px;
+        }
+
+        .benefit {
+            background: #111722;
+
+            border: 1px solid #202938;
+
+            border-radius: 15px;
+
+            padding: 25px;
+
+            transition: 0.3s;
+        }
+
+        .benefit:hover {
+            transform: translateY(-5px);
+
+            border-color: #00ff8c;
+        }
+
+        .benefit-icon {
+            font-size: 30px;
+
+            margin-bottom: 10px;
+        }
+
+        .benefit h3 {
+            margin-bottom: 7px;
+        }
+
+        .benefit p {
+            color: #aeb5c2;
+        }
+
+        /* PLANOS */
+
+        .plans {
+            background: #080b12;
+        }
+
+        .plans-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 30px;
+
+            max-width: 900px;
+
+            margin: auto;
+        }
+
+        .plan {
+            position: relative;
+
+            background: #111722;
+
+            border: 1px solid #283244;
+
+            border-radius: 20px;
+
+            padding: 35px;
+
+            transition: 0.3s;
+        }
+
+        .plan:hover {
+            transform: translateY(-8px);
+        }
+
+        .plan-premium {
+            border: 2px solid #00ff8c;
+
+            box-shadow:
+                0 0 35px
+                rgba(0, 255, 140, 0.08);
+        }
+
+        .popular {
+            position: absolute;
+
+            top: -15px;
+
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            background: #00ff8c;
+
+            color: #06100b;
+
+            padding: 6px 18px;
+
+            border-radius: 30px;
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+            white-space: nowrap;
+        }
+
+        .plan-name {
+            font-size: 22px;
+
+            font-weight: bold;
+
+            margin-bottom: 10px;
+        }
+
+        .plan-description {
+            color: #aeb5c2;
+
+            min-height: 50px;
+        }
+
+        .price {
+            margin: 25px 0;
+        }
+
+        .price small {
+            color: #aeb5c2;
+
+            font-size: 14px;
+        }
+
+        .price strong {
+            display: block;
+
+            font-size: 45px;
+
+            line-height: 1.1;
+        }
+
+        .price span {
+            color: #aeb5c2;
+
+            font-size: 14px;
+        }
+
+        .features {
+            list-style: none;
+
+            margin: 25px 0;
+        }
+
+        .features li {
+            padding: 8px 0;
+
+            color: #d9dee7;
+        }
+
+        .features li::before {
+            content: "✓";
+
+            color: #00ff8c;
+
+            font-weight: bold;
+
+            margin-right: 10px;
+        }
+
+        .plan-button {
+            display: block;
+
+            width: 100%;
+
+            text-align: center;
+
+            padding: 15px;
+
+            border-radius: 10px;
+
+            background: #242c39;
+
+            color: white;
+
+            font-weight: bold;
+
+            transition: 0.3s;
+        }
+
+        .plan-button:hover {
+            background: #323c4d;
+        }
+
+        .premium-button {
+            background: #00ff8c;
+
+            color: #06100b;
+        }
+
+        .premium-button:hover {
+            background: #00d978;
+
+            box-shadow:
+                0 8px 25px
+                rgba(0, 255, 140, 0.2);
+        }
+
+        /* COMPARAÇÃO */
+
+        .comparison {
+            background: #0c1019;
+        }
+
+        .comparison-box {
+            max-width: 800px;
+
+            margin: auto;
+
+            background: #111722;
+
+            border: 1px solid #202938;
+
+            border-radius: 18px;
+
+            overflow: hidden;
+        }
+
+        .comparison-row {
+            display: grid;
+
+            grid-template-columns:
+                2fr 1fr 1fr;
+
+            padding: 17px 20px;
+
+            border-bottom: 1px solid #202938;
+        }
+
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+
+        .check {
+            color: #00ff8c;
+
+            text-align: center;
+        }
+
+        .cross {
+            color: #777f8e;
+
+            text-align: center;
+        }
+
+        /* CTA */
+
+        .cta {
+            text-align: center;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    #122d24 0%,
+                    #080b12 65%
+                );
+        }
+
+        .cta h2 {
+            font-size: 45px;
+
+            margin-bottom: 15px;
+        }
+
+        .cta p {
+            color: #aeb5c2;
+
+            max-width: 600px;
+
+            margin: auto;
+        }
+
+        .cta-button {
+            display: inline-block;
+
+            margin-top: 30px;
+
+            background: #00ff8c;
+
+            color: #06100b;
+
+            padding: 17px 40px;
+
+            border-radius: 10px;
+
+            font-weight: bold;
+
+            font-size: 18px;
+
+            transition: 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.04);
+
+            box-shadow:
+                0 10px 40px
+                rgba(0, 255, 140, 0.25);
+        }
+
+        /* RODAPÉ */
+
+        footer {
+            padding: 30px 20px;
+
+            text-align: center;
+
+            background: #05070b;
+
+            color: #737b89;
+
+            font-size: 14px;
+        }
+
+        /* CELULAR */
+
+        @media (max-width: 750px) {
+
+            .hero {
+                min-height: auto;
+
+                padding: 80px 20px;
+            }
+
+            .hero h1 {
+                font-size: 43px;
+            }
+
+            .hero p {
+                font-size: 17px;
+            }
+
+            .benefit-grid,
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 31px;
+            }
+
+            .cta h2 {
+                font-size: 34px;
+            }
+
+            .comparison-row {
+                grid-template-columns:
+                    1.5fr 1fr 1fr;
+
+                font-size: 14px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+
+    <!-- PARTE PRINCIPAL -->
+
+    <header class="hero">
+
+        <div class="hero-content">
+
+            <div class="tag">
+                🚀 GUIA PARA INICIANTES
+            </div>
+
+            <h1>
+                Aprenda a
+                <span>vender online</span>
+                de forma simples
+            </h1>
+
+            <p>
+                Descubra os primeiros passos para começar
+                a vender pela internet, criar ofertas e
+                divulgar seus produtos mesmo começando do zero.
+            </p>
+
+            <a
+                href="#planos"
+                class="hero-button"
+            >
+                VER OS PLANOS ↓
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- BENEFÍCIOS -->
+
+    <section class="benefits">
+
+        <div class="container">
+
+            <h2 class="section-title">
+                O que você vai aprender?
+            </h2>
+
+            <p class="section-subtitle">
+                Um conteúdo direto ao ponto para você
+                entender como funciona o processo de vendas online.
+            </p>
+
+
+            <div class="benefit-grid">
+
+
+                <div class="benefit">
+
+                    <div class="benefit-icon">
+                        🎯
+                    </div>
+
+                    <h3>
+                        Escolher o que vender
+                    </h3>
+
+                    <p>
+                        Entenda como encontrar produtos
+                        e ideias que podem ser divulgados
+                        na internet.
+                    </p>
+
+                </div>
+
+
+                <div class="benefit">
+
+                    <div class="benefit-icon">
+                        💰
+                    </div>
+
+                    <h3>
+                        Criar uma oferta
+                    </h3>
+
+                    <p>
+                        Aprenda conceitos básicos para
+                        apresentar seu produto de uma
+                        maneira mais interessante.
+                    </p>
+
+                </div>
+
+
+                <div class="benefit">
+
+                    <div class="benefit-icon">
+                        📱
+                    </div>
+
+                    <h3>
+                        Divulgar no TikTok
+                    </h3>
+
+                    <p>
+                        Veja como utilizar vídeos curtos
+                        para chamar atenção e apresentar
+                        seus produtos.
+                    </p>
+
+                </div>
+
+
+                <div class="benefit">
+
+                    <div class="benefit-icon">
+                        📈
+                    </div>
+
+                    <h3>
+                        Melhorar suas vendas
+                    </h3>
+
+                    <p>
+                        Aprenda estratégias simples para
+                        analisar seus resultados e melhorar
+                        aos poucos.
+                    </p>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- PLANOS -->
+
+    <section
+        class="plans"
+        id="planos"
+    >
+
+        <div class="container">
+
+            <h2 class="section-title">
+                Escolha seu plano
+            </h2>
+
+            <p class="section-subtitle">
+                Escolha a opção que combina com o seu momento.
+            </p>
+
+
+            <div class="plans-grid">
+
+
+                <!-- PLANO ESSENCIAL -->
+
+                <div class="plan">
+
+                    <div class="plan-name">
+                        🟢 Essencial
+                    </div>
+
+                    <p class="plan-description">
+                        Para quem quer começar e aprender
+                        os fundamentos.
+                    </p>
+
+
+                    <div class="price">
+
+                        <small>
+                            Por apenas
+                        </small>
+
+                        <strong>
+                            R$ 14,90
+                        </strong>
+
+                        <span>
+                            pagamento único
+                        </span>
+
+                    </div>
+
+
+                    <ul class="features">
+
+                        <li>
+                            E-book completo
+                        </li>
+
+                        <li>
+                            Guia passo a passo
+                        </li>
+
+                        <li>
+                            Fundamentos das vendas online
+                        </li>
+
+                        <li>
+                            Estratégias básicas
+                        </li>
+
+                        <li>
+                            Acesso imediato
+                        </li>
+
+                    </ul>
+
+
+                    <!-- LINK DA KIWIFY ESSENCIAL -->
+
+                    <a
+                        href=https://pay.kiwify.com.br/PLPL8Tq
+                        class="plan-button"
+                    >
+                        QUERO O ESSENCIAL
+                    </a>
+
+                </div>
+
+
+                <!-- PLANO PREMIUM -->
+
+                <div class="plan plan-premium">
+
+                    <div class="popular">
+                        ⭐ MAIS COMPLETO
+                    </div>
+
+
+                    <div class="plan-name">
+                        👑 Premium
+                    </div>
+
+                    <p class="plan-description">
+                        Para quem quer mais estratégias
+                        e materiais para começar.
+                    </p>
+
+
+                    <div class="price">
+
+                        <small>
+                            Por apenas
+                        </small>
+
+                        <strong>
+                            R$ 59,90
+                        </strong>
+
+                        <span>
+                            pagamento único
+                        </span>
+
+                    </div>
+
+
+                    <ul class="features">
+
+                        <li>
+                            Tudo do Plano Essencial
+                        </li>
+
+                        <li>
+                            Estratégias avançadas de divulgação
+                        </li>
+
+                        <li>
+                            Estratégias para TikTok
+                        </li>
+
+                        <li>
+                            Ideias de conteúdos
+                        </li>
+
+                        <li>
+                            Modelos de chamadas para vendas
+                        </li>
+
+                        <li>
+                            Checklist para começar
+                        </li>
+
+                        <li>
+                            Materiais bônus
+                        </li>
+
+                        <li>
+                            Guia para organizar suas primeiras vendas
+                        </li>
+
+                    </ul>
+
+
+                    <!-- LINK DA KIWIFY PREMIUM -->
+
+                    <a
+                        href="https://pay.kiwify.com.br/bQAdEAS"
+                        class="plan-button premium-button"
+                    >
+                        QUERO O PREMIUM 🚀
+                    </a>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- COMPARAÇÃO -->
+
+    <section class="comparison">
+
+        <div class="container">
+
+            <h2 class="section-title">
+                Compare os planos
+            </h2>
+
+            <p class="section-subtitle">
+                Veja rapidamente o que está incluso
+                em cada opção.
+            </p>
+
+
+            <div class="comparison-box">
+
+
+                <div class="comparison-row">
+
+                    <strong>
+                        Conteúdo
+                    </strong>
+
+                    <strong style="text-align:center;">
+                        Essencial
+                    </strong>
+
+                    <strong style="text-align:center;">
+                        Premium
+                    </strong>
+
+                </div>
+
+
+                <div class="comparison-row">
+
+                    <span>
+                        E-book completo
+                    </span>
+
+                    <span class="check">
+                        ✓
+                    </span>
+
+                    <span class="check">
+                        ✓
+                    </span>
+
+                </div>
+
+
+                <div class="comparison-row">
+
+                    <span>
+                        Guia passo a passo
+                    </span>
+
+                    <span class="check">
+                        ✓
+                    </span>
+
+                    <span class="check">
+                        ✓
+                    </span>
+
+                </div>
+
+
+                <div class="comparison-row">
+
+                    <span>
+                        Estratégias para TikTok
+                    </span>
+
+                    <span class="cross">
+                        —
+                    </span>
+
+                    <span class="check">
+                        ✓
+                    </span>
+
+                </div>
+
+
+                <div class="comparison-row">
+
+                    <span>
+                        Materiais bônus
+                    </span>
+
+                    <span class="cross">
+                        —
+                    </span>
+
+                    <span class="check">
+                        ✓
+                    </span>
+
+                </div>
+
+
+                <div class="comparison-row">
+
+                    <span>
+                        Checklist
+                    </span>
+
+                    <span class="cross">
+                        —
+                    </span>
+
+                    <span class="check">
+                        ✓
+                    </span>
+
+                </div>
+
+
+                <div class="comparison-row">
+
+                    <span>
+                        Estratégias avançadas
+                    </span>
+
+                    <span class="cross">
+                        —
+                    </span>
+
+                    <span class="check">
+                        ✓
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CHAMADA FINAL -->
+
+    <section class="cta">
+
+        <div class="container">
+
+            <h2>
+                Comece hoje 🚀
+            </h2>
+
+            <p>
+                Não precisa esperar tudo estar perfeito.
+                Aprenda, coloque em prática e evolua com o tempo.
+            </p>
+
+            <a
+                href="#planos"
+                class="cta-button"
+            >
+                ESCOLHER MEU PLANO
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- RODAPÉ -->
+
+    <footer>
+
+        <p>
+            © 2026 - Venda Online de Forma Simples
+        </p>
+
+        <p>
+            Conteúdo digital. Resultados podem variar
+            de acordo com dedicação, estratégia e
+            aplicação do conteúdo.
+        </p>
+
+    </footer>
+
+
+</body>
+
+</html>
