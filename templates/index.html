@@ -399,6 +399,118 @@
             text-align: center;
         }
 
+        .payment-methods {
+            padding: 80px 0;
+            background: #0c1018;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .payment-card {
+            background: #1a1f29;
+            border: 1px solid #202938;
+            border-radius: 14px;
+            padding: 28px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .payment-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 255, 140, 0.12);
+            border-color: #00ff8c;
+        }
+
+        .payment-card h3 {
+            margin-bottom: 18px;
+            color: #00ff8c;
+            font-size: 1.6rem;
+        }
+
+        .payment-card p,
+        .payment-card li {
+            color: #c7ccd6;
+            line-height: 1.8;
+        }
+
+        .payment-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0 0;
+        }
+
+        .payment-card li {
+            margin-bottom: 12px;
+            padding-left: 22px;
+            position: relative;
+        }
+
+        .payment-card li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #00ff8c;
+            font-size: 1.2rem;
+            top: 0;
+        }
+
+        .faq {
+            padding: 80px 0;
+            background: #080b12;
+        }
+
+        .faq-item {
+            background: #0f1520;
+            border: 1px solid #202938;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 22px 24px;
+            cursor: pointer;
+            transition: background-color 0.25s ease;
+        }
+
+        .faq-question:hover {
+            background: rgba(0, 255, 140, 0.08);
+        }
+
+        .faq-question strong {
+            color: #00ff8c;
+            font-size: 1rem;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            padding: 0 24px;
+            color: #c7ccd6;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.35s ease;
+        }
+
+        .faq-answer.open {
+            padding: 18px 24px 24px;
+            max-height: 320px;
+        }
+
+        .faq-toggle {
+            color: #c7ccd6;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-toggle.open {
+            transform: rotate(45deg);
+        }
+
         /* CTA Section */
         .cta {
             padding: 80px 0;
@@ -611,6 +723,91 @@
         </div>
     </section>
 
+    <!-- PAGAMENTOS -->
+    <section class="payment-methods" id="pagamentos">
+        <div class="container">
+            <h2 class="section-title">Como funciona o pagamento?</h2>
+            <p class="section-subtitle">Veja como cada opção libera o conteúdo e como escolher a melhor forma de pagar.</p>
+            <div class="payment-grid">
+                <div class="payment-card">
+                    <h3>Plano Essencial</h3>
+                    <p>Pagamento único e entrega imediata do material básico. Ideal para quem quer aprender rápido e começar com pouco investimento.</p>
+                    <ul>
+                        <li>Acesso imediato após confirmação</li>
+                        <li>Conteúdo direto ao ponto</li>
+                        <li>Perfeito para quem está começando</li>
+                    </ul>
+                </div>
+                <div class="payment-card">
+                    <h3>Plano Premium</h3>
+                    <p>Pagamento único com conteúdo avançado e materiais extras. Para quem quer ir além e ter mais suporte inicial.</p>
+                    <ul>
+                        <li>Tudo do Essencial</li>
+                        <li>Estratégias extras de divulgação</li>
+                        <li>Checklist completo e modelos prontos</li>
+                    </ul>
+                </div>
+                <div class="payment-card">
+                    <h3>Formas de pagamento</h3>
+                    <p>Escolha a opção que você já usa no dia a dia. O processo é simples e seguro.</p>
+                    <ul>
+                        <li>PIX: liberação instantânea</li>
+                        <li>Cartão de crédito: parcelamento ou pagamento único</li>
+                        <li>Boleto: liberação assim que confirmado</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PERGUNTAS FREQUENTES -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <h2 class="section-title">Perguntas frequentes</h2>
+            <p class="section-subtitle">Respostas rápidas para as dúvidas mais comuns sobre compra e acesso ao conteúdo.</p>
+
+            <div class="faq-item">
+                <div class="faq-question" data-toggle="answer-1">
+                    <strong>Quando eu recebo o material após a compra?</strong>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div id="answer-1" class="faq-answer">
+                    <p>Após a confirmação do pagamento, você recebe o acesso imediato ao material através da página de confirmação e por e-mail.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" data-toggle="answer-2">
+                    <strong>Posso pagar com PIX e cartão de crédito?</strong>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div id="answer-2" class="faq-answer">
+                    <p>Sim, aceitamos PIX, cartão de crédito e boleto. A forma de pagamento aparece no carrinho ou página de checkout.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" data-toggle="answer-3">
+                    <strong>O conteúdo funciona para quem não tem experiência?</strong>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div id="answer-3" class="faq-answer">
+                    <p>Sim. O guia foi feito para iniciantes, com explicações claras e passos simples para começar a vender online mesmo sem experiência.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" data-toggle="answer-4">
+                    <strong>Tem suporte após a compra?</strong>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div id="answer-4" class="faq-answer">
+                    <p>Sim, há suporte para dúvidas básicas e acompanhamento inicial, especialmente no plano Premium com conteúdos extras.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CHAMADA FINAL -->
     <section class="cta">
         <div class="container">
@@ -626,6 +823,37 @@
         <p>Conteúdo digital. Resultados podem variar de acordo com dedicação, estratégia e aplicação do conteúdo.</p>
     </footer>
 
+    <script>
+        const faqQuestions = document.querySelectorAll('.faq-question');
+
+        faqQuestions.forEach((question) => {
+            question.addEventListener('click', () => {
+                const targetId = question.dataset.toggle;
+                const answer = document.getElementById(targetId);
+                const toggle = question.querySelector('.faq-toggle');
+                const openAnswer = document.querySelector('.faq-answer.open');
+
+                if (openAnswer && openAnswer !== answer) {
+                    openAnswer.classList.remove('open');
+                    const openToggle = openAnswer.previousElementSibling.querySelector('.faq-toggle');
+                    if (openToggle) {
+                        openToggle.classList.remove('open');
+                        openToggle.textContent = '+';
+                    }
+                }
+
+                if (answer.classList.contains('open')) {
+                    answer.classList.remove('open');
+                    toggle.classList.remove('open');
+                    toggle.textContent = '+';
+                } else {
+                    answer.classList.add('open');
+                    toggle.classList.add('open');
+                    toggle.textContent = '−';
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
