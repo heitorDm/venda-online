@@ -711,9 +711,10 @@ def comprar_premium():
 # INICIAR
 # =========================================================
 
-if __name__ == "__main__":
+criar_banco()
 
-    criar_banco()
+
+if __name__ == "__main__":
 
     app.run(
         debug=True
