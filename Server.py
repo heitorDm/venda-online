@@ -8,17 +8,39 @@ from email.message import EmailMessage
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
+
+def load_env_file(path=".env"):
+    try:
+        with open(path, "r", encoding="utf-8") as arquivo:
+            for linha in arquivo:
+                linha = linha.strip()
+                if not linha or linha.startswith("#") or "=" not in linha:
+                    continue
+                chave, valor = linha.split("=", 1)
+                os.environ.setdefault(chave.strip(), valor.strip().strip('"').strip("'"))
+    except FileNotFoundError:
+        pass
+
+
+load_env_file()
+
 app = Flask(__name__)
 
 # Chave usada para proteger a sessão
 app.secret_key = os.getenv("SECRET_KEY", "heitor e lindo")
 
-EMAIL_USER = os.getenv("EMAIL_USER")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ["true", "1", "yes"]
-EMAIL_FROM = os.getenv("EMAIL_FROM", EMAIL_USER)
+
+def _get_bool_env(name, default):
+    value = os.getenv(name, str(default)).strip().lower()
+    return value in ["1", "true", "yes", "on"]
+
+
+EMAIL_USER = os.getenv("EMAIL_USER", "").strip().lower()
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "").replace(" ", "").strip()
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com").strip()
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = _get_bool_env("EMAIL_USE_TLS", True)
+EMAIL_FROM = os.getenv("EMAIL_FROM", EMAIL_USER).strip()
 
 SERIALIZER_SALT = "email-confirmation-salt"
 CONFIRMATION_TOKEN_EXPIRATION = 86400  # 24 horas
@@ -75,14 +97,21 @@ def get_serializer():
 
 
 def send_confirmation_email(destino_email, token, nome):
-    if not EMAIL_USER or not EMAIL_PASSWORD:
-        return False, "Configuração de e-mail não encontrada."
-
     confirm_url = url_for("confirmar_email", token=token, _external=True)
+
+    if not EMAIL_USER or not EMAIL_PASSWORD:
+        mensagem = (
+            "Configuração de e-mail não encontrada. "
+            "Crie um arquivo .env com EMAIL_USER e EMAIL_PASSWORD "
+            "ou defina as variáveis de ambiente antes de iniciar o app."
+        )
+        print(mensagem)
+        return False, mensagem
 
     message = EmailMessage()
     message["Subject"] = "Confirme seu e-mail - Venda Online"
     message["From"] = EMAIL_FROM
+    message["Reply-To"] = EMAIL_FROM
     message["To"] = destino_email
 
     body_text = f"""Olá {nome or ''},
@@ -116,15 +145,25 @@ Se você não criou essa conta, ignore esta mensagem.
     try:
         context = ssl.create_default_context()
         if EMAIL_USE_TLS:
-            with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
+            with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=30) as server:
+                server.ehlo()
                 server.starttls(context=context)
+                server.ehlo()
                 server.login(EMAIL_USER, EMAIL_PASSWORD)
                 server.send_message(message)
         else:
-            with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT, context=context) as server:
+            with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT, context=context, timeout=30) as server:
                 server.login(EMAIL_USER, EMAIL_PASSWORD)
                 server.send_message(message)
         return True, None
+    except smtplib.SMTPAuthenticationError:
+        mensagem = (
+            "Credenciais do Gmail rejeitadas. "
+            "Use a senha de app do Google e não a senha normal da conta. "
+            "Ative a verificação em duas etapas e gere a senha de app em myaccount.google.com/apppasswords."
+        )
+        print(mensagem)
+        return False, mensagem
     except Exception as error:
         print("Erro ao enviar e-mail:", error)
         return False, str(error)
@@ -177,12 +216,16 @@ def cadastro():
 
         banco.close()
         token = get_serializer().dumps(email, salt=SERIALIZER_SALT)
-        sent, _ = send_confirmation_email(email, token, nome)
+        sent, error = send_confirmation_email(email, token, nome)
 
         if sent:
             return render_template("login.html", message="Conta criada! Verifique seu e-mail para ativar a conta.")
 
-        return render_template("login.html", message="Conta criada! Não foi possível enviar o e-mail de confirmação agora. Use reenviar confirmação mais tarde.")
+        return render_template(
+            "login.html",
+            error=f"Conta criada, mas não foi possível enviar o e-mail: {error}",
+            email=email,
+        )
 
     return render_template("cadastro.html")
 
@@ -248,10 +291,10 @@ def reenviar_confirmacao():
 
         if usuario and not usuario["email_verificado"]:
             token = get_serializer().dumps(email, salt=SERIALIZER_SALT)
-            sent, _ = send_confirmation_email(email, token, usuario["nome"])
+            sent, error = send_confirmation_email(email, token, usuario["nome"])
             if sent:
                 return render_template("reenviar_confirmacao.html", message="E-mail de confirmação reenviado com sucesso. Verifique sua caixa de entrada.", email=email)
-            return render_template("reenviar_confirmacao.html", error="Não foi possível enviar o e-mail de confirmação. Tente novamente mais tarde.", email=email)
+            return render_template("reenviar_confirmacao.html", error=f"Não foi possível enviar o e-mail de confirmação: {error}", email=email)
 
         return render_template("reenviar_confirmacao.html", message="Se esse e-mail estiver cadastrado e não confirmado, você receberá um novo link de confirmação.", email=email)
 

@@ -76,6 +76,11 @@
             background: #008f5a;
         }
 
+        button:disabled {
+            background: #7fbda6;
+            cursor: not-allowed;
+        }
+
         .login {
             text-align: center;
             margin-top: 20px;
@@ -115,6 +120,7 @@
     </style>
 </head>
 
+
 <body>
 
     <div class="cadastro-box">
@@ -126,12 +132,17 @@
         </p>
 
         {% if error %}
-            <p class="form-message error">{{ error }}</p>
+            <p class="form-message error">
+                {{ error }}
+            </p>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('cadastro') }}">
 
-            <label for="nome">Nome</label>
+        <form id="cadastroForm">
+
+            <label for="nome">
+                Nome
+            </label>
 
             <input
                 type="text"
@@ -142,7 +153,10 @@
                 required
             >
 
-            <label for="email">E-mail</label>
+
+            <label for="email">
+                E-mail
+            </label>
 
             <input
                 type="email"
@@ -153,7 +167,10 @@
                 required
             >
 
-            <label for="senha">Senha</label>
+
+            <label for="senha">
+                Senha
+            </label>
 
             <input
                 type="password"
@@ -164,17 +181,417 @@
                 required
             >
 
-            <button type="submit">
+
+            <button type="submit" id="botaoCriarConta">
                 CRIAR CONTA
             </button>
 
         </form>
 
+
         <p class="login">
             Já tem uma conta?
-            <a href="{{ url_for('login') }}">Entrar</a>
+            <a href="{{ url_for('login') }}">
+                Entrar
+            </a>
         </p>
 
     </div>
 
 
+    <!-- ==========================================
+         FIREBASE
+         ========================================== -->
+
+    <script type="module">
+
+        import { initializeApp }
+            from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            sendEmailVerification,
+            updateProfile
+        }
+            from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+
+        // ==========================================
+        // CONFIGURAÇÃO DO FIREBASE
+        // ==========================================
+
+        const firebaseConfig = {
+
+            apiKey:
+                "AIzaSyDmb8peQAaMeQQCyp0vH4yJau64DIsBEB0",
+
+            authDomain:
+                "vendas-online-e98a2.firebaseapp.com",
+
+            projectId:
+                "vendas-online-e98a2",
+
+            storageBucket:
+                "vendas-online-e98a2.firebasestorage.app",
+
+            messagingSenderId:
+                "521120362757",
+
+            appId:
+                "1:521120362757:web:465a844e74c9050327476c",
+
+            measurementId:
+                "G-JYVSRFBY8Y"
+        };
+
+
+        // ==========================================
+        // INICIALIZA O FIREBASE
+        // ==========================================
+
+        const app =
+            initializeApp(firebaseConfig);
+
+        const auth =
+            getAuth(app);
+
+
+        // ==========================================
+        // PEGA O FORMULÁRIO
+        // ==========================================
+
+        const formulario =
+            document.getElementById("cadastroForm");
+
+
+        const botao =
+            document.getElementById("botaoCriarConta");
+
+
+        // ==========================================
+        // CONFERE SE O FORMULÁRIO EXISTE
+        // ==========================================
+
+        if (!formulario) {
+
+            console.error(
+                "ERRO: formulário cadastroForm não encontrado."
+            );
+
+        } else {
+
+
+            // ==========================================
+            // CADASTRO
+            // ==========================================
+
+            formulario.addEventListener(
+                "submit",
+                async (event) => {
+
+                    event.preventDefault();
+
+
+                    // ======================================
+                    // PEGA OS DADOS
+                    // ======================================
+
+                    const nome =
+                        document
+                            .getElementById("nome")
+                            .value
+                            .trim();
+
+
+                    const email =
+                        document
+                            .getElementById("email")
+                            .value
+                            .trim();
+
+
+                    const senha =
+                        document
+                            .getElementById("senha")
+                            .value;
+
+
+                    // ======================================
+                    // VALIDAÇÕES
+                    // ======================================
+
+                    if (!nome) {
+
+                        alert(
+                            "Digite seu nome."
+                        );
+
+                        return;
+                    }
+
+
+                    if (!email) {
+
+                        alert(
+                            "Digite seu e-mail."
+                        );
+
+                        return;
+                    }
+
+
+                    if (senha.length < 6) {
+
+                        alert(
+                            "A senha precisa ter pelo menos 6 caracteres."
+                        );
+
+                        return;
+                    }
+
+
+                    // ======================================
+                    // DESABILITA BOTÃO
+                    // ======================================
+
+                    if (botao) {
+
+                        botao.disabled = true;
+
+                        botao.textContent =
+                            "CRIANDO CONTA...";
+                    }
+
+
+                    try {
+
+
+                        // ==================================
+                        // 1. CRIAR CONTA
+                        // ==================================
+
+                        let resultado;
+
+                        try {
+
+                            resultado =
+                                await createUserWithEmailAndPassword(
+                                    auth,
+                                    email,
+                                    senha
+                                );
+
+                        } catch (erroCadastro) {
+
+                            console.error(
+                                "ERRO AO CRIAR CONTA:",
+                                erroCadastro
+                            );
+
+
+                            if (
+                                erroCadastro.code ===
+                                "auth/email-already-in-use"
+                            ) {
+
+                                alert(
+                                    "Esse e-mail já está cadastrado."
+                                );
+
+                            }
+
+                            else if (
+                                erroCadastro.code ===
+                                "auth/invalid-email"
+                            ) {
+
+                                alert(
+                                    "Digite um e-mail válido."
+                                );
+
+                            }
+
+                            else if (
+                                erroCadastro.code ===
+                                "auth/weak-password"
+                            ) {
+
+                                alert(
+                                    "A senha precisa ter pelo menos 6 caracteres."
+                                );
+
+                            }
+
+                            else if (
+                                erroCadastro.code ===
+                                "auth/operation-not-allowed"
+                            ) {
+
+                                alert(
+                                    "O cadastro por e-mail e senha não está ativado no Firebase."
+                                );
+
+                            }
+
+                            else {
+
+                                alert(
+                                    "Erro ao criar a conta.\n\n" +
+                                    "Código: " +
+                                    erroCadastro.code +
+                                    "\n\n" +
+                                    erroCadastro.message
+                                );
+
+                            }
+
+                            return;
+                        }
+
+
+                        // ==================================
+                        // USUÁRIO CRIADO
+                        // ==================================
+
+                        const usuario =
+                            resultado.user;
+
+
+                        console.log(
+                            "Usuário criado:",
+                            usuario
+                        );
+
+
+                        // ==================================
+                        // 2. SALVAR O NOME
+                        // ==================================
+
+                        try {
+
+                            await updateProfile(
+                                usuario,
+                                {
+                                    displayName: nome
+                                }
+                            );
+
+                        } catch (erroNome) {
+
+                            console.warn(
+                                "Não foi possível salvar o nome:",
+                                erroNome
+                            );
+
+                        }
+
+
+                        // ==================================
+                        // 3. ENVIAR VERIFICAÇÃO
+                        // ==================================
+
+                        if (botao) {
+
+                            botao.textContent =
+                                "ENVIANDO E-MAIL...";
+                        }
+
+
+                        try {
+
+                            await sendEmailVerification(
+                                usuario
+                            );
+
+
+                            // ==================================
+                            // SUCESSO
+                            // ==================================
+
+                            alert(
+                                "Conta criada com sucesso!\n\n" +
+                                "Enviamos um e-mail de confirmação para:\n\n" +
+                                email +
+                                "\n\n" +
+                                "Abra seu e-mail e clique no link de confirmação."
+                            );
+
+
+                            formulario.reset();
+
+
+                        } catch (erroEmail) {
+
+
+                            // ==================================
+                            // ERRO NO E-MAIL
+                            // ==================================
+
+                            console.error(
+                                "ERRO AO ENVIAR VERIFICAÇÃO:",
+                                erroEmail
+                            );
+
+
+                            alert(
+                                "A conta foi criada, mas não foi possível enviar o e-mail de confirmação.\n\n" +
+                                "Código do erro:\n" +
+                                erroEmail.code +
+                                "\n\n" +
+                                "Mensagem:\n" +
+                                erroEmail.message
+                            );
+
+                        }
+
+
+                    } catch (erro) {
+
+
+                        // ==================================
+                        // ERRO GERAL
+                        // ==================================
+
+                        console.error(
+                            "ERRO GERAL:",
+                            erro
+                        );
+
+
+                        alert(
+                            "Ocorreu um erro inesperado.\n\n" +
+                            "Código: " +
+                            erro.code +
+                            "\n\n" +
+                            erro.message
+                        );
+
+
+                    } finally {
+
+
+                        // ==================================
+                        // REATIVA BOTÃO
+                        // ==================================
+
+                        if (botao) {
+
+                            botao.disabled = false;
+
+                            botao.textContent =
+                                "CRIAR CONTA";
+                        }
+
+                    }
+
+                }
+            );
+
+        }
+
+    </script>
+
+</body>
+
+</html>
