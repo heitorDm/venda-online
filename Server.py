@@ -225,7 +225,6 @@ def login():
 # =========================================================
 # LOGIN FIREBASE → FLASK
 # =========================================================
-print(">>> ROTA FIREBASE-LOGIN CARREGADA <<<")
 
 @app.route(
     "/firebase-login",
