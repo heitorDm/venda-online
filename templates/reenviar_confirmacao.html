@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Criar conta - Venda Online</title>
-
+    <title>Reenviar Confirmação - Venda Online</title>
     <style>
         * {
             box-sizing: border-box;
@@ -23,9 +20,9 @@
             background: linear-gradient(135deg, #071B13, #00A86B);
         }
 
-        .cadastro-box {
+        .box {
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             background: white;
             padding: 35px;
             border-radius: 18px;
@@ -106,44 +103,22 @@
             color: #155a3b;
             border: 1px solid #a0d3be;
         }
-
-        .form-message.info {
-            background: #eef7ff;
-            color: #1f4f7a;
-            border: 1px solid #a7c6e7;
-        }
     </style>
 </head>
-
 <body>
-
-    <div class="cadastro-box">
-
-        <h1>Criar conta</h1>
-
-        <p class="subtitle">
-            Crie sua conta para continuar
-        </p>
+    <div class="box">
+        <h1>Reenviar confirmação</h1>
+        <p class="subtitle">Digite seu e-mail para receber um novo link de confirmação.</p>
 
         {% if error %}
             <p class="form-message error">{{ error }}</p>
         {% endif %}
+        {% if message %}
+            <p class="form-message success">{{ message }}</p>
+        {% endif %}
 
-        <form method="POST" action="{{ url_for('cadastro') }}">
-
-            <label for="nome">Nome</label>
-
-            <input
-                type="text"
-                id="nome"
-                name="nome"
-                placeholder="Digite seu nome"
-                value="{{ nome|default('') }}"
-                required
-            >
-
+        <form method="POST" action="{{ url_for('reenviar_confirmacao') }}">
             <label for="email">E-mail</label>
-
             <input
                 type="email"
                 id="email"
@@ -152,29 +127,13 @@
                 value="{{ email|default('') }}"
                 required
             >
-
-            <label for="senha">Senha</label>
-
-            <input
-                type="password"
-                id="senha"
-                name="senha"
-                placeholder="Crie uma senha"
-                minlength="6"
-                required
-            >
-
-            <button type="submit">
-                CRIAR CONTA
-            </button>
-
+            <button type="submit">REENVIAR CONFIRMAÇÃO</button>
         </form>
 
         <p class="login">
-            Já tem uma conta?
+            Já recebeu o e-mail?
             <a href="{{ url_for('login') }}">Entrar</a>
         </p>
-
     </div>
-
-
+</body>
+</html>
