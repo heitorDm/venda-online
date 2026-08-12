@@ -1,397 +1,606 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import os
-import re
+import json
 import sqlite3
-import smtplib
-import ssl
-from email.message import EmailMessage
-from werkzeug.security import generate_password_hash, check_password_hash
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+import secrets
+
+from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash
+
+import firebase_admin
+from firebase_admin import credentials, auth
 
 
-def load_env_file(path=".env"):
-    try:
-        with open(path, "r", encoding="utf-8") as arquivo:
-            for linha in arquivo:
-                linha = linha.strip()
-                if not linha or linha.startswith("#") or "=" not in linha:
-                    continue
-                chave, valor = linha.split("=", 1)
-                os.environ.setdefault(chave.strip(), valor.strip().strip('"').strip("'"))
-    except FileNotFoundError:
-        pass
+# =========================================================
+# CONFIGURAÇÃO
+# =========================================================
 
-
-load_env_file()
+load_dotenv()
 
 app = Flask(__name__)
 
-# Chave usada para proteger a sessão
-app.secret_key = os.getenv("SECRET_KEY", "heitor e lindo")
+app.secret_key = os.getenv(
+    "SECRET_KEY",
+    "troque-esta-chave-no-render"
+)
 
 
-def _get_bool_env(name, default):
-    value = os.getenv(name, str(default)).strip().lower()
-    return value in ["1", "true", "yes", "on"]
+# Segurança da sessão
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+app.config["SESSION_COOKIE_SECURE"] = (
+    os.getenv("SESSION_COOKIE_SECURE", "false").lower()
+    in ["1", "true", "yes", "on"]
+)
 
 
-EMAIL_USER = os.getenv("EMAIL_USER", "").strip().lower()
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "").replace(" ", "").strip()
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com").strip()
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = _get_bool_env("EMAIL_USE_TLS", True)
-EMAIL_FROM = os.getenv("EMAIL_FROM", EMAIL_USER).strip()
+# =========================================================
+# FIREBASE ADMIN
+# =========================================================
 
-SERIALIZER_SALT = "email-confirmation-salt"
-CONFIRMATION_TOKEN_EXPIRATION = 86400  # 24 horas
-EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
+def inicializar_firebase():
+
+    if firebase_admin._apps:
+        return
+
+    firebase_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+
+    if not firebase_json:
+        raise RuntimeError(
+            "A variável FIREBASE_SERVICE_ACCOUNT_JSON não foi configurada."
+        )
+
+    try:
+
+        dados_credencial = json.loads(firebase_json)
+
+        credencial = credentials.Certificate(
+            dados_credencial
+        )
+
+        firebase_admin.initialize_app(
+            credencial,
+            {
+                "projectId": "vendas-online-e98a2"
+            }
+        )
+
+        print("Firebase Admin inicializado com sucesso.")
+
+    except Exception as erro:
+
+        print(
+            "ERRO AO INICIALIZAR FIREBASE ADMIN:",
+            erro
+        )
+
+        raise
 
 
-# =========================
+inicializar_firebase()
+
+
+# =========================================================
 # BANCO DE DADOS
-# =========================
-
+# =========================================================
 
 def conectar_banco():
+
     banco = sqlite3.connect("sistema.db")
+
     banco.row_factory = sqlite3.Row
+
     return banco
 
 
 def criar_banco():
+
     banco = conectar_banco()
+
     cursor = banco.cursor()
+
+
+    # -----------------------------------------------------
+    # USUÁRIOS
+    # -----------------------------------------------------
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS usuarios (
+
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+
             nome TEXT NOT NULL,
+
             email TEXT UNIQUE NOT NULL,
+
             senha TEXT NOT NULL,
+
             email_verificado INTEGER NOT NULL DEFAULT 0
+
         )
     """)
+
+
+    # -----------------------------------------------------
+    # ALUNOS
+    # -----------------------------------------------------
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS alunos (
+
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+
             nome TEXT NOT NULL,
+
             idade INTEGER NOT NULL,
+
             nota REAL NOT NULL,
+
             usuario_id INTEGER NOT NULL,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+
+            FOREIGN KEY (usuario_id)
+                REFERENCES usuarios(id)
+
         )
     """)
 
-    cursor.execute("PRAGMA table_info(usuarios)")
-    columns = [row[1] for row in cursor.fetchall()]
-    if "email_verificado" not in columns:
-        cursor.execute("ALTER TABLE usuarios ADD COLUMN email_verificado INTEGER NOT NULL DEFAULT 0")
+
+    # -----------------------------------------------------
+    # VERIFICA COLUNAS ANTIGAS
+    # -----------------------------------------------------
+
+    cursor.execute(
+        "PRAGMA table_info(usuarios)"
+    )
+
+    colunas = [
+        linha[1]
+        for linha in cursor.fetchall()
+    ]
+
+
+    if "email_verificado" not in colunas:
+
+        cursor.execute("""
+            ALTER TABLE usuarios
+            ADD COLUMN email_verificado
+            INTEGER NOT NULL DEFAULT 0
+        """)
+
+
+    # -----------------------------------------------------
+    # ADICIONA FIREBASE UID
+    # -----------------------------------------------------
+
+    if "firebase_uid" not in colunas:
+
+        cursor.execute("""
+            ALTER TABLE usuarios
+            ADD COLUMN firebase_uid TEXT
+        """)
+
 
     banco.commit()
+
     banco.close()
 
 
-def get_serializer():
-    return URLSafeTimedSerializer(app.secret_key)
-
-
-def send_confirmation_email(destino_email, token, nome):
-    confirm_url = url_for("confirmar_email", token=token, _external=True)
-
-    if not EMAIL_USER or not EMAIL_PASSWORD:
-        mensagem = (
-            "Configuração de e-mail não encontrada. "
-            "Crie um arquivo .env com EMAIL_USER e EMAIL_PASSWORD "
-            "ou defina as variáveis de ambiente antes de iniciar o app."
-        )
-        print(mensagem)
-        return False, mensagem
-
-    message = EmailMessage()
-    message["Subject"] = "Confirme seu e-mail - Venda Online"
-    message["From"] = EMAIL_FROM
-    message["Reply-To"] = EMAIL_FROM
-    message["To"] = destino_email
-
-    body_text = f"""Olá {nome or ''},
-
-Obrigado por criar sua conta em Venda Online.
-
-Clique no link abaixo para confirmar seu e-mail:
-
-{confirm_url}
-
-Se você não criou essa conta, ignore esta mensagem.
-"""
-
-    body_html = f"""<html>
-    <body style="font-family: Arial, sans-serif; color: #111; background: #f4f7f8; padding: 20px;">
-      <div style="max-width:600px; margin: auto; background: #ffffff; border-radius: 14px; padding: 30px; box-shadow: 0 0 30px rgba(0,0,0,0.08);">
-        <h2 style="color: #00a86b;">Olá {nome or ''},</h2>
-        <p>Obrigado por criar sua conta em <strong>Venda Online</strong>.</p>
-        <p>Clique no botão abaixo para confirmar seu e-mail:</p>
-        <p style="text-align: center; margin: 35px 0;">
-          <a href="{confirm_url}" style="display:inline-block; padding: 14px 28px; border-radius: 10px; background:#00a86b; color:#ffffff; text-decoration:none; font-weight:bold;">Confirmar meu e-mail</a>
-        </p>
-        <p>Se você não criou essa conta, apenas ignore esta mensagem.</p>
-      </div>
-    </body>
-    </html>"""
-
-    message.set_content(body_text)
-    message.add_alternative(body_html, subtype="html")
-
-    try:
-        context = ssl.create_default_context()
-        if EMAIL_USE_TLS:
-            with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=30) as server:
-                server.ehlo()
-                server.starttls(context=context)
-                server.ehlo()
-                server.login(EMAIL_USER, EMAIL_PASSWORD)
-                server.send_message(message)
-        else:
-            with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT, context=context, timeout=30) as server:
-                server.login(EMAIL_USER, EMAIL_PASSWORD)
-                server.send_message(message)
-        return True, None
-    except smtplib.SMTPAuthenticationError:
-        mensagem = (
-            "Credenciais do Gmail rejeitadas. "
-            "Use a senha de app do Google e não a senha normal da conta. "
-            "Ative a verificação em duas etapas e gere a senha de app em myaccount.google.com/apppasswords."
-        )
-        print(mensagem)
-        return False, mensagem
-    except Exception as error:
-        print("Erro ao enviar e-mail:", error)
-        return False, str(error)
-
-
-# =========================
+# =========================================================
 # PÁGINA PRINCIPAL
-# =========================
+# =========================================================
 
 @app.route("/")
 def inicio():
-    return render_template("index.html")
+
+    return render_template(
+        "index.html"
+    )
 
 
-# =========================
+# =========================================================
 # CADASTRO
-# =========================
+# =========================================================
 
-@app.route("/cadastro", methods=["GET", "POST"])
+@app.route("/cadastro")
 def cadastro():
-    if request.method == "POST":
-        nome = request.form["nome"].strip()
-        email = request.form["email"].strip().lower()
-        senha = request.form["senha"]
 
-        if not nome or not email or not senha:
-            return render_template("cadastro.html", error="Todos os campos são obrigatórios.", nome=nome, email=email)
+    return render_template(
+        "cadastro.html"
+    )
 
-        if len(senha) < 6:
-            return render_template("cadastro.html", error="A senha deve ter ao menos 6 caracteres.", nome=nome, email=email)
 
-        if not EMAIL_REGEX.match(email):
-            return render_template("cadastro.html", error="Informe um e-mail válido.", nome=nome, email=email)
+# =========================================================
+# LOGIN
+# =========================================================
 
-        senha_hash = generate_password_hash(senha)
-        banco = conectar_banco()
+@app.route("/login")
+def login():
 
-        try:
-            banco.execute(
-                """
-                INSERT INTO usuarios (nome, email, senha, email_verificado)
-                VALUES (?, ?, ?, 0)
-                """,
-                (nome, email, senha_hash)
-            )
-            banco.commit()
-        except sqlite3.IntegrityError:
-            banco.close()
-            return render_template("cadastro.html", error="Esse e-mail já está cadastrado.", nome=nome, email=email)
+    return render_template(
+        "login.html"
+    )
 
-        banco.close()
-        token = get_serializer().dumps(email, salt=SERIALIZER_SALT)
-        sent, error = send_confirmation_email(email, token, nome)
 
-        if sent:
-            return render_template("login.html", message="Conta criada! Verifique seu e-mail para ativar a conta.")
+# =========================================================
+# LOGIN FIREBASE → FLASK
+# =========================================================
+print(">>> ROTA FIREBASE-LOGIN CARREGADA <<<")
 
-        return render_template(
-            "login.html",
-            error=f"Conta criada, mas não foi possível enviar o e-mail: {error}",
-            email=email,
+@app.route(
+    "/firebase-login",
+    methods=["POST"]
+)
+def firebase_login():
+
+    try:
+
+        dados = request.get_json(
+            silent=True
         )
 
-    return render_template("cadastro.html")
+
+        if not dados:
+
+            return jsonify({
+                "success": False,
+                "error": "Dados não enviados."
+            }), 400
 
 
-# =========================
-# LOGIN
-# =========================
+        id_token = dados.get(
+            "idToken"
+        )
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form["email"].strip().lower()
-        senha = request.form["senha"]
 
-        if not email or not senha:
-            return render_template("login.html", error="Preencha e-mail e senha.", email=email)
+        if not id_token:
 
-        if not EMAIL_REGEX.match(email):
-            return render_template("login.html", error="E-mail inválido.", email=email)
+            return jsonify({
+                "success": False,
+                "error": "Token do Firebase não enviado."
+            }), 400
+
+
+        # =================================================
+        # VERIFICA TOKEN NO FIREBASE
+        # =================================================
+
+        token_decodificado = (
+            auth.verify_id_token(id_token)
+        )
+
+
+        firebase_uid = token_decodificado.get(
+            "uid"
+        )
+
+        email = token_decodificado.get(
+            "email"
+        )
+
+        nome = (
+            token_decodificado.get(
+                "name"
+            )
+            or email
+            or "Usuário"
+        )
+
+        email_verificado = (
+            token_decodificado.get(
+                "email_verified",
+                False
+            )
+        )
+
+
+        if not firebase_uid:
+
+            return jsonify({
+                "success": False,
+                "error": "Token sem UID."
+            }), 401
+
+
+        if not email:
+
+            return jsonify({
+                "success": False,
+                "error": "O Firebase não informou o e-mail."
+            }), 401
+
+
+        # =================================================
+        # EXIGE E-MAIL VERIFICADO
+        # =================================================
+
+        if not email_verificado:
+
+            return jsonify({
+                "success": False,
+                "error": "E-mail ainda não verificado.",
+                "email_verified": False
+            }), 403
+
+
+        # =================================================
+        # PROCURA USUÁRIO NO SQLITE
+        # =================================================
 
         banco = conectar_banco()
+
+
         usuario = banco.execute(
             """
             SELECT *
             FROM usuarios
-            WHERE email = ?
+            WHERE firebase_uid = ?
             """,
-            (email,)
+            (
+                firebase_uid,
+            )
         ).fetchone()
+
+
+        # =================================================
+        # SE NÃO ENCONTROU PELO UID,
+        # PROCURA PELO E-MAIL
+        # =================================================
+
+        if not usuario:
+
+            usuario = banco.execute(
+                """
+                SELECT *
+                FROM usuarios
+                WHERE email = ?
+                """,
+                (
+                    email.lower(),
+                )
+            ).fetchone()
+
+
+        # =================================================
+        # USUÁRIO AINDA NÃO EXISTE NO SQLITE
+        # =================================================
+
+        if not usuario:
+
+            senha_temporaria = secrets.token_urlsafe(
+                32
+            )
+
+            senha_hash = generate_password_hash(
+                senha_temporaria
+            )
+
+
+            cursor = banco.execute(
+                """
+                INSERT INTO usuarios
+                (
+                    nome,
+                    email,
+                    senha,
+                    email_verificado,
+                    firebase_uid
+                )
+                VALUES (?, ?, ?, 1, ?)
+                """,
+                (
+                    nome,
+                    email.lower(),
+                    senha_hash,
+                    firebase_uid
+                )
+            )
+
+
+            banco.commit()
+
+
+            usuario_id = cursor.lastrowid
+
+
+            usuario = banco.execute(
+                """
+                SELECT *
+                FROM usuarios
+                WHERE id = ?
+                """,
+                (
+                    usuario_id,
+                )
+            ).fetchone()
+
+
+        # =================================================
+        # USUÁRIO JÁ EXISTE
+        # =================================================
+
+        else:
+
+            banco.execute(
+                """
+                UPDATE usuarios
+                SET
+                    nome = ?,
+                    email_verificado = 1,
+                    firebase_uid = ?
+                WHERE id = ?
+                """,
+                (
+                    nome,
+                    firebase_uid,
+                    usuario["id"]
+                )
+            )
+
+
+            banco.commit()
+
+
+            usuario = banco.execute(
+                """
+                SELECT *
+                FROM usuarios
+                WHERE id = ?
+                """,
+                (
+                    usuario["id"],
+                )
+            ).fetchone()
+
+
         banco.close()
 
-        if not usuario or not check_password_hash(usuario["senha"], senha):
-            return render_template("login.html", error="E-mail ou senha incorretos.", email=email)
 
-        if not usuario["email_verificado"]:
-            return render_template("login.html", error="Verifique seu e-mail antes de entrar.", show_resend=True, email=email)
+        # =================================================
+        # CRIA A SESSÃO DO FLASK
+        # =================================================
+
+        session.clear()
+
 
         session["usuario_id"] = usuario["id"]
+
         session["usuario_nome"] = usuario["nome"]
-        return redirect(url_for("inicio"))
 
-    return render_template("login.html")
+        session["usuario_email"] = usuario["email"]
 
-
-# =========================
-# REENVIAR CONFIRMAÇÃO DE E-MAIL
-# =========================
-
-@app.route("/reenviar-confirmacao", methods=["GET", "POST"])
-def reenviar_confirmacao():
-    if request.method == "POST":
-        email = request.form["email"].strip().lower()
-
-        if not email or not EMAIL_REGEX.match(email):
-            return render_template("reenviar_confirmacao.html", error="Informe um e-mail válido.", email=email)
-
-        banco = conectar_banco()
-        usuario = banco.execute(
-            "SELECT * FROM usuarios WHERE email = ?",
-            (email,)
-        ).fetchone()
-        banco.close()
-
-        if usuario and not usuario["email_verificado"]:
-            token = get_serializer().dumps(email, salt=SERIALIZER_SALT)
-            sent, error = send_confirmation_email(email, token, usuario["nome"])
-            if sent:
-                return render_template("reenviar_confirmacao.html", message="E-mail de confirmação reenviado com sucesso. Verifique sua caixa de entrada.", email=email)
-            return render_template("reenviar_confirmacao.html", error=f"Não foi possível enviar o e-mail de confirmação: {error}", email=email)
-
-        return render_template("reenviar_confirmacao.html", message="Se esse e-mail estiver cadastrado e não confirmado, você receberá um novo link de confirmação.", email=email)
-
-    return render_template("reenviar_confirmacao.html")
+        session["firebase_uid"] = firebase_uid
 
 
-# =========================
-# CONFIRMAÇÃO DE E-MAIL
-# =========================
-
-@app.route("/confirmar-email/<token>")
-def confirmar_email(token):
-    try:
-        email = get_serializer().loads(token, salt=SERIALIZER_SALT, max_age=CONFIRMATION_TOKEN_EXPIRATION)
-    except SignatureExpired:
-        return render_template("confirmacao_expirada.html", expired=True)
-    except BadSignature:
-        return render_template("confirmacao_expirada.html", invalid=True)
-
-    banco = conectar_banco()
-    usuario = banco.execute(
-        "SELECT * FROM usuarios WHERE email = ?",
-        (email,)
-    ).fetchone()
-
-    if not usuario:
-        banco.close()
-        return render_template("confirmacao_expirada.html", invalid=True)
-
-    if usuario["email_verificado"]:
-        banco.close()
-        return render_template("email_confirmado.html", already=True)
-
-    banco.execute(
-        "UPDATE usuarios SET email_verificado = 1 WHERE email = ?",
-        (email,)
-    )
-    banco.commit()
-    banco.close()
-
-    return render_template("email_confirmado.html", success=True)
+        return jsonify({
+            "success": True,
+            "message": "Login realizado com sucesso.",
+            "redirect": url_for("inicio")
+        })
 
 
-# =========================
+    except auth.InvalidIdTokenError:
+
+        return jsonify({
+            "success": False,
+            "error": "Token do Firebase inválido."
+        }), 401
+
+
+    except auth.ExpiredIdTokenError:
+
+        return jsonify({
+            "success": False,
+            "error": "Token do Firebase expirado."
+        }), 401
+
+
+    except Exception as erro:
+
+        print(
+            "ERRO NO LOGIN FIREBASE:",
+            erro
+        )
+
+        return jsonify({
+            "success": False,
+            "error": "Erro interno ao autenticar."
+        }), 500
+
+
+# =========================================================
 # LOGOUT
-# =========================
+# =========================================================
 
 @app.route("/logout")
 def logout():
+
     session.clear()
-    return redirect(url_for("login"))
+
+    return redirect(
+        url_for("login")
+    )
 
 
-# =========================
+# =========================================================
 # PAINEL
-# =========================
+# =========================================================
 
 @app.route("/painel")
 def painel():
+
     if "usuario_id" not in session:
-        return redirect(url_for("login"))
 
-    return f"""
-        <h1>Login realizado!</h1>
-        <p>Olá, {session["usuario_nome"]}!</p>
-        <p>Você está logado.</p>
-        <a href="{url_for("logout")}">Sair</a>
-    """
+        return redirect(
+            url_for("login")
+        )
 
 
-# =========================
+    return render_template(
+        "painel.html"
+    )
+
+
+# =========================================================
 # ADICIONAR ALUNO
-# =========================
+# =========================================================
 
-@app.route("/aluno/adicionar", methods=["POST"])
+@app.route(
+    "/aluno/adicionar",
+    methods=["POST"]
+)
 def adicionar_aluno():
+
     if "usuario_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
+
 
     try:
+
         nome = request.form["nome"]
-        idade = int(request.form["idade"])
-        nota = float(request.form["nota"])
-    except (ValueError, KeyError):
+
+        idade = int(
+            request.form["idade"]
+        )
+
+        nota = float(
+            request.form["nota"]
+        )
+
+
+    except (
+        ValueError,
+        KeyError
+    ):
+
         return "Dados inválidos."
 
+
     if idade < 0:
+
         return "A idade não pode ser negativa."
 
+
     if nota < 0 or nota > 10:
+
         return "A nota deve estar entre 0 e 10."
 
+
     banco = conectar_banco()
+
+
     banco.execute(
         """
         INSERT INTO alunos
-        (nome, idade, nota, usuario_id)
+        (
+            nome,
+            idade,
+            nota,
+            usuario_id
+        )
         VALUES (?, ?, ?, ?)
         """,
         (
@@ -401,22 +610,39 @@ def adicionar_aluno():
             session["usuario_id"]
         )
     )
+
+
     banco.commit()
+
     banco.close()
 
-    return redirect(url_for("painel"))
+
+    return redirect(
+        url_for("painel")
+    )
 
 
-# =========================
+# =========================================================
 # REMOVER ALUNO
-# =========================
+# =========================================================
 
-@app.route("/aluno/remover/<int:aluno_id>")
-def remover_aluno(aluno_id):
+@app.route(
+    "/aluno/remover/<int:aluno_id>"
+)
+def remover_aluno(
+    aluno_id
+):
+
     if "usuario_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
+
 
     banco = conectar_banco()
+
+
     banco.execute(
         """
         DELETE FROM alunos
@@ -428,30 +654,68 @@ def remover_aluno(aluno_id):
             session["usuario_id"]
         )
     )
+
+
     banco.commit()
+
     banco.close()
 
-    return redirect(url_for("painel"))
+
+    return redirect(
+        url_for("painel")
+    )
 
 
-# =========================
-# INICIAR
-# =========================
+# =========================================================
+# COMPRAR PLANO ESSENCIAL
+# =========================================================
 
-@app.route("/comprar/essencial")
+@app.route(
+    "/comprar/essencial"
+)
 def comprar_essencial():
+
     if "usuario_id" not in session:
-        return redirect(url_for("login"))
-    return redirect("https://pay.kiwify.com.br/PLPL8Tq")
+
+        return redirect(
+            url_for("login")
+        )
 
 
-@app.route("/comprar/premium")
+    return redirect(
+        "https://pay.kiwify.com.br/PLPL8Tq"
+    )
+
+
+# =========================================================
+# COMPRAR PLANO PREMIUM
+# =========================================================
+
+@app.route(
+    "/comprar/premium"
+)
 def comprar_premium():
-    if "usuario_id" not in session:
-        return redirect(url_for("login"))
-    return redirect("https://pay.kiwify.com.br/bQAdEAS")
 
+    if "usuario_id" not in session:
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    return redirect(
+        "https://pay.kiwify.com.br/bQAdEAS"
+    )
+
+
+# =========================================================
+# INICIAR
+# =========================================================
 
 if __name__ == "__main__":
+
     criar_banco()
-    app.run(debug=True)
+
+    app.run(
+        debug=True
+    )
