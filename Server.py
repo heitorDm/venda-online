@@ -41,27 +41,39 @@ app.config["SESSION_COOKIE_SECURE"] = (
 
 def inicializar_firebase():
 
-    if firebase_admin._apps:
-        return
-
-    firebase_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
-
     try:
-        
-     if firebase_json:
+
+        # Só retorna se o APP PADRÃO realmente existir.
+        try:
+            firebase_admin.get_app()
+            print("Firebase Admin já estava inicializado.")
+            return
+
+        except ValueError:
+            pass
+
+
+        firebase_json = os.getenv(
+            "FIREBASE_SERVICE_ACCOUNT_JSON"
+        )
+
+
+        if firebase_json:
 
             dados_credencial = json.loads(
                 firebase_json
-                      )
+            )
 
             credencial = credentials.Certificate(
                 dados_credencial
             )
 
-     else:
+        else:
 
             caminho_credencial = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
+                os.path.dirname(
+                    os.path.abspath(__file__)
+                ),
                 "firebase-service-account.json"
             )
 
@@ -69,14 +81,18 @@ def inicializar_firebase():
                 caminho_credencial
             )
 
-            firebase_admin.initialize_app(
+
+        firebase_admin.initialize_app(
             credencial,
             {
                 "projectId": "vendas-online-e98a2"
             }
         )
 
-            print("Firebase Admin inicializado com sucesso.")
+        print(
+            "Firebase Admin inicializado com sucesso."
+        )
+
 
     except Exception as erro:
 
@@ -86,7 +102,6 @@ def inicializar_firebase():
         )
 
         raise
-
 
 inicializar_firebase()
 
