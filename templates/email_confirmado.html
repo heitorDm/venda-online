@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-mail Confirmado - Venda Online</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #071B13, #00A86B);
+        }
+
+        .box {
+            width: 90%;
+            max-width: 480px;
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+
+        h1 {
+            color: #071B13;
+            margin-bottom: 18px;
+        }
+
+        p {
+            color: #444;
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        .success {
+            color: #155a3b;
+        }
+
+        .notice {
+            color: #1f4f7a;
+        }
+
+        a {
+            display:inline-block;
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: #00A86B;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            background: #008f5a;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>E-mail confirmado</h1>
+        {% if already %}
+            <p class="notice">Seu e-mail já estava confirmado anteriormente. Agora você já pode entrar.</p>
+        {% elif success %}
+            <p class="success">Seu e-mail foi confirmado com sucesso! Você pode fazer login agora.</p>
+        {% endif %}
+        <a href="{{ url_for('login') }}">Ir para o login</a>
+    </div>
+</body>
+</html>

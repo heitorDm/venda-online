@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação Expirada - Venda Online</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #071B13, #00A86B);
+        }
+
+        .box {
+            width: 90%;
+            max-width: 480px;
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+
+        h1 {
+            color: #071B13;
+            margin-bottom: 18px;
+        }
+
+        p {
+            color: #444;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .error {
+            color: #921f1f;
+        }
+
+        a {
+            display:inline-block;
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: #00A86B;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            background: #008f5a;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>Confirmação de e-mail</h1>
+        {% if expired %}
+            <p class="error">O link de confirmação expirou. Solicite um novo e-mail de confirmação.</p>
+        {% elif invalid %}
+            <p class="error">O link de confirmação é inválido ou já foi usado.</p>
+        {% else %}
+            <p class="error">Não foi possível confirmar o e-mail. Tente novamente.</p>
+        {% endif %}
+        <a href="{{ url_for('reenviar_confirmacao') }}">Reenviar confirmação</a>
+    </div>
+</body>
+</html>

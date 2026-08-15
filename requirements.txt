@@ -1,0 +1,6 @@
+Flask
+Werkzeug
+gunicorn
+python-dotenv
+itsdangerous
+firebase-admin

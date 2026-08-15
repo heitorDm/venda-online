@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviços - Venda Online</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: #080b12;
+            color: #e0e0e0;
+            line-height: 1.7;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 40px;
+            background: rgba(8, 11, 18, 0.95);
+            border-bottom: 1px solid #202938;
+            backdrop-filter: blur(12px);
+        }
+
+        .logo {
+            color: #00ff8c;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover {
+            background: #00ff8c;
+            color: #06100b;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 120px 20px 70px;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 45px;
+        }
+
+        .icon {
+            font-size: 3.6rem;
+            margin-bottom: 15px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            max-width: 720px;
+            margin: 0 auto;
+            color: #c7ccd6;
+            font-size: 1.1rem;
+        }
+
+        .content-box {
+            background: #111722;
+            border: 1px solid #202938;
+            border-radius: 16px;
+            padding: 35px;
+            margin-bottom: 25px;
+        }
+
+        .content-box h2 {
+            color: #00ff8c;
+            margin-bottom: 10px;
+        }
+
+        .placeholder {
+            margin-top: 20px;
+            padding: 22px;
+            border: 1px dashed #3a4658;
+            border-radius: 12px;
+            color: #98a3b3;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 35px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            background: #00ff8c;
+            color: #06100b;
+        }
+
+        .button.secondary {
+            background: #1a1f29;
+            color: #e0e0e0;
+            border: 1px solid #202938;
+        }
+
+        footer {
+            padding: 35px;
+            text-align: center;
+            background: #06090f;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 700px) {
+            .navbar { padding: 15px 20px; }
+            .hero h1 { font-size: 2.25rem; }
+            .content-box { padding: 25px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Venda Online</div>
+
+        <div class="nav-links">
+            <a href="{{ url_for('escolher') }}">Escolher</a>
+
+            {% if session.get("usuario_id") %}
+                <a href="{{ url_for('logout') }}">Sair</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <section class="hero">
+            <div class="icon">🛠️</div>
+
+            <h1>Serviços</h1>
+
+            <p>Aprenda a transformar uma habilidade ou conhecimento em um serviço que possa ser oferecido e vendido.</p>
+        </section>
+
+        <section class="content-box">
+            <h2>Comece por aqui</h2>
+
+            <p>
+                Esta área está preparada para receber o seu conteúdo.
+                Você poderá explicar como pesquisar, escolher uma
+                oportunidade, começar, testar e vender.
+            </p>
+
+            <div class="placeholder">
+                <strong>Seu conteúdo entra aqui.</strong><br>
+                Organize nesta página os passos, exemplos, ferramentas,
+                exercícios e orientações que você quiser ensinar.
+            </div>
+        </section>
+
+        <div class="actions">
+            <a href="{{ url_for('escolher') }}" class="button secondary">
+                ← Voltar para escolhas
+            </a>
+
+            <a href="{{ url_for('inicio') }}" class="button">
+                Ir para o início
+            </a>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>© 2026 - Venda Online de Forma Simples</p>
+    </footer>
+
+</body>
+</html>
